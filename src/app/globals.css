@@ -1,3 +1,18 @@
+:root {
+  --font-inter: "Inter", sans-serif;
+}
+
+html {
+  font-family: var(--font-inter);
+
+  font-feature-settings:
+    "cv01" 1,
+    "cv05" 1,
+    "cv11" 1;
+
+  font-variation-settings: normal;
+}
+
 *,
 *::before,
 *::after {
@@ -9,9 +24,4 @@
 html,
 body {
   height: 100%;
-}
-
-body {
-  /* Inter single-story 'a' variant */
-  font-feature-settings: "cv05" 1;
 }
