@@ -1,0 +1,107 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ─── Folder + file animation ─── */
+.animArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 125px;
+  overflow: visible;
+}
+
+/* Three-layer composited stack */
+.folderStack {
+  position: relative;
+  width: 95px;
+  height: 85px;
+  overflow: visible;
+}
+
+/* Folder SVG layers — absolutely stacked at the same origin */
+.folderLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 95px;
+  height: 85px;
+  overflow: visible;
+}
+
+/* File layer — sits between back body and front flap */
+.filesLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 95px;
+  height: 85px;
+  overflow: visible;
+}
+
+/* The file object — GSAP drives y / scale / opacity */
+.file {
+  position: absolute;
+}
+
+/*
+  Front flap — rendered on top of the file layer.
+  filter: blur gives the flap a soft frosted-glass material feel
+  without the clipping artifacts of backdrop-filter + clip-path.
+  The blur only affects the flap path area (the upper transparent
+  area of the SVG has nothing to blur).
+*/
+.folderFrontLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 95px;
+  height: 85px;
+  overflow: visible;
+  filter: blur(1.5px);
+}
+
+/* ─── Progress bar ─── */
+.progressWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.track {
+  width: 240px;
+  height: 24px;
+  background: #EEF2FF;
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background: linear-gradient(90deg, #74AAFF, #0057FF);
+  border-radius: 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(200%); }
+}

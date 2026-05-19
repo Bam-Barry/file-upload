@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { useEffect, useRef, useState } from "react";
 import styles from "./Card.module.css";
 import UploadIcon from "./UploadIcon";
+import UploadingState from "./UploadingState";
 
 const REPEL_RADIUS = 90;
 const REPEL_STRENGTH = 10;
@@ -241,7 +242,7 @@ export default function Card({ className, style }: CardProps) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" }}
             >
-              {/* uploading UI — coming soon */}
+              <UploadingState />
             </motion.div>
           )}
         </AnimatePresence>
