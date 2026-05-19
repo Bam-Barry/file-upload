@@ -21,8 +21,11 @@ interface CardProps {
   autoStart?: boolean;
 }
 
-// Parent stagger: each child exits 110ms after the previous
+// Parent stagger: children enter with delay on reset, exit one-by-one
 const idleContainerVariants = {
+  enter: {
+    transition: { staggerChildren: 0.09, delayChildren: 0.26 },
+  },
   visible: {},
   exit: {
     transition: { staggerChildren: 0.11, staggerDirection: 1 },
@@ -30,8 +33,9 @@ const idleContainerVariants = {
 };
 
 const fadePop = {
-  visible: { opacity: 1 },
-  exit: { opacity: 0 },
+  enter:   { opacity: 0, y: 5 },
+  visible: { opacity: 1, y: 0 },
+  exit:    { opacity: 0, y: -3 },
 };
 
 export default function Card({
@@ -252,7 +256,7 @@ export default function Card({
               key="idle"
               className={styles.idleContent}
               variants={idleContainerVariants}
-              initial="visible"
+              initial="enter"
               animate="visible"
               exit="exit"
             >
@@ -290,7 +294,7 @@ export default function Card({
               className={styles.uploadingScene}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, transition: { duration: 0.28, ease: "easeOut" } }}
               transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" }}
             >
               <UploadingState
