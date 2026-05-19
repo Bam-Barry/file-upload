@@ -210,6 +210,33 @@ export default function UploadingState({
             ref={folderStackRef}
             className={styles.folderStack}
             style={{ width: FOLDER_WIDTH, height: FOLDER_HEIGHT }}
+            onMouseEnter={() => {
+              if (result !== "success") return;
+              const file = fileRef.current;
+              if (!file) return;
+              gsap.to(file, {
+                y: 18,
+                rotation: -8,
+                scale: 0.9,
+                opacity: 1,
+                duration: 0.35,
+                ease: "power2.out",
+                transformOrigin: "center bottom",
+              });
+            }}
+            onMouseLeave={() => {
+              if (result !== "success") return;
+              const file = fileRef.current;
+              if (!file) return;
+              gsap.to(file, {
+                y: 38,
+                rotation: 0,
+                scale: 0.86,
+                opacity: 0.88,
+                duration: 0.35,
+                ease: "power2.out",
+              });
+            }}
           >
             <div className={styles.folderLayer}>
               <FolderBackLayer width={FOLDER_WIDTH} height={FOLDER_HEIGHT} />
@@ -241,7 +268,7 @@ export default function UploadingState({
               transition={{ delay: 0.1, duration: 0.46, ease: easeOut }}
             >
               {isError ? (
-                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                   <path
                     d="M6.3 6.3L13.7 13.7M13.7 6.3L6.3 13.7"
                     stroke="currentColor"
@@ -250,7 +277,7 @@ export default function UploadingState({
                   />
                 </svg>
               ) : (
-                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                   <path
                     d="M5.25 10.35L8.38 13.48L14.95 6.52"
                     stroke="currentColor"

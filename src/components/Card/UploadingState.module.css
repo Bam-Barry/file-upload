@@ -128,31 +128,31 @@
 }
 
 .checkBadge {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   color: #ffffff;
   background: #20c875;
-  box-shadow: 0 7px 16px rgba(32, 200, 117, 0.18);
+  box-shadow: 0 5px 12px rgba(32, 200, 117, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -34px;
+  margin-top: -30px;
   position: relative;
   z-index: 4;
 }
 
 .errorBadge {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   color: #ffffff;
   background: #ff4e65;
-  box-shadow: 0 7px 16px rgba(255, 78, 101, 0.18);
+  box-shadow: 0 5px 12px rgba(255, 78, 101, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -34px;
+  margin-top: -30px;
   position: relative;
   z-index: 4;
 }
