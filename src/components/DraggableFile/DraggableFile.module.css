@@ -1,0 +1,61 @@
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 10px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 4px 14px rgba(0, 0, 0, 0.07);
+  cursor: grab;
+  user-select: none;
+  width: 165px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.07),
+    0 8px 22px rgba(0, 0, 0, 0.11);
+}
+
+.chip:active {
+  cursor: grabbing;
+  transform: scale(0.97) translateY(0);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.name {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.size {
+  font-size: 10px;
+  font-weight: 400;
+  color: #aaaaaa;
+}
+
+.handle {
+  flex-shrink: 0;
+  color: #d0d0d0;
+  display: flex;
+  align-items: center;
+}
+

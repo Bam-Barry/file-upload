@@ -10,3 +10,8 @@ html,
 body {
   height: 100%;
 }
+
+body {
+  /* Inter single-story 'a' variant */
+  font-feature-settings: "cv05" 1;
+}

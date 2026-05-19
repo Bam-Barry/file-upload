@@ -19,6 +19,8 @@ interface CardProps {
   outcome?: UploadOutcome;
   uploadDuration?: number;
   autoStart?: boolean;
+  onUploadStart?: () => void;
+  onReset?: () => void;
 }
 
 // Parent stagger: children enter with delay on reset, exit one-by-one
@@ -44,6 +46,8 @@ export default function Card({
   outcome = "success",
   uploadDuration = 2.8,
   autoStart = false,
+  onUploadStart,
+  onReset: onResetProp,
 }: CardProps) {
   const innerRef = useRef<HTMLDivElement>(null);
   const iconSlotRef = useRef<HTMLDivElement>(null);
@@ -65,7 +69,8 @@ export default function Card({
   const beginUpload = useCallback(() => {
     setUploadSession((session) => session + 1);
     setUploadState("uploading");
-  }, []);
+    onUploadStart?.();
+  }, [onUploadStart]);
 
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -82,7 +87,8 @@ export default function Card({
     setIsDragging(false);
     dragCounter.current = 0;
     if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
+    onResetProp?.();
+  }, [onResetProp]);
 
   const handleClick = () => {
     if (uploadState !== "idle") return;
@@ -113,7 +119,11 @@ export default function Card({
     dragCounter.current = 0;
     setIsDragging(false);
     if (uploadState !== "idle") return;
-    handleFiles(e.dataTransfer.files);
+    if (e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    } else if (e.dataTransfer.getData("application/x-drag-file")) {
+      beginUpload();
+    }
   };
 
   // GSAP repel — quickTo created lazily so it always targets the live DOM element
