@@ -99,11 +99,19 @@
   overflow: hidden;
 }
 
+:global([data-theme="dark"]) .track {
+  background: #202631;
+}
+
 .fill {
   height: 100%;
   background: #F0F6FF;
   /* track's overflow:hidden + border-radius clips the left edge rounded;
      right edge is naturally flat as the fill grows */
+}
+
+:global([data-theme="dark"]) .fill {
+  background: #263b62;
 }
 
 .pctText {
@@ -126,6 +134,21 @@
   color: #ffffff;
   background: #20c875;
   box-shadow: 0 7px 16px rgba(32, 200, 117, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -34px;
+  position: relative;
+  z-index: 4;
+}
+
+.errorBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #ff4e65;
+  box-shadow: 0 7px 16px rgba(255, 78, 101, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,11 +182,19 @@
   color: #151515;
 }
 
+:global([data-theme="dark"]) .successTitle {
+  color: #f7f8fb;
+}
+
 .successSubtitle {
   font-size: 10.5px;
   line-height: 1.35;
   font-weight: 400;
   color: #7c7c7c;
+}
+
+:global([data-theme="dark"]) .successSubtitle {
+  color: #a9b2c2;
 }
 
 .resetButton {
@@ -181,6 +212,15 @@
   align-items: center;
   justify-content: center;
   padding: 0;
+}
+
+:global([data-theme="dark"]) .resetButton {
+  background: #202631;
+  border-color: rgba(173, 201, 255, 0.18);
+  color: #adc9ff;
+  box-shadow:
+    inset -1px 2px 4px rgba(7, 10, 16, 0.3),
+    0 8px 18px rgba(0, 0, 0, 0.22);
 }
 
 .resetButton:focus-visible {

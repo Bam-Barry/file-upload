@@ -33,13 +33,15 @@ const SPAWN_Y = -48;
 const FILE_INSERTION_DELAY = 1.05;
 
 interface UploadingStateProps {
-  isComplete: boolean;
+  result: "success" | "error" | null;
+  uploadDuration: number;
   onComplete: () => void;
   onReset: () => void;
 }
 
 export default function UploadingState({
-  isComplete,
+  result,
+  uploadDuration,
   onComplete,
   onReset,
 }: UploadingStateProps) {
@@ -54,16 +56,23 @@ export default function UploadingState({
   useEffect(() => {
     const controls = animate(progress, 100, {
       delay: 0.52,
-      duration: 2.8,
+      duration: uploadDuration,
       ease: [0.22, 1, 0.36, 1],
-      onComplete,
     });
-    return controls.stop;
-  }, [onComplete, progress]);
+    const completionTimer = window.setTimeout(
+      onComplete,
+      (uploadDuration + 0.52) * 1000
+    );
+
+    return () => {
+      controls.stop();
+      window.clearTimeout(completionTimer);
+    };
+  }, [onComplete, progress, uploadDuration]);
 
   useEffect(() => {
-    completeRef.current = isComplete;
-  }, [isComplete]);
+    completeRef.current = result !== null;
+  }, [result]);
 
   useEffect(() => {
     const file = fileRef.current;
@@ -159,7 +168,7 @@ export default function UploadingState({
   useEffect(() => {
     const file = fileRef.current;
     const folder = folderStackRef.current;
-    if (!file || !folder || !isComplete) return;
+    if (!file || !folder || result === null) return;
 
     gsap.killTweensOf(file);
     gsap.killTweensOf(folder);
@@ -176,7 +185,10 @@ export default function UploadingState({
       duration: 0.22,
       ease: "power2.out",
     });
-  }, [isComplete]);
+  }, [result]);
+
+  const isComplete = result !== null;
+  const isError = result === "error";
 
   return (
     <div className={styles.container}>
@@ -222,21 +234,32 @@ export default function UploadingState({
         <AnimatePresence>
           {isComplete && (
             <motion.div
-              className={styles.checkBadge}
+              className={isError ? styles.errorBadge : styles.checkBadge}
               initial={{ opacity: 0, y: -12, scale: 0.65 }}
               animate={{ opacity: 1, y: -12, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.8 }}
               transition={{ delay: 0.1, duration: 0.46, ease: easeOut }}
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path
-                  d="M5.25 10.35L8.38 13.48L14.95 6.52"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              {isError ? (
+                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M6.3 6.3L13.7 13.7M13.7 6.3L6.3 13.7"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              ) : (
+                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M5.25 10.35L8.38 13.48L14.95 6.52"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -268,9 +291,13 @@ export default function UploadingState({
               exit={{ opacity: 0, y: 8 }}
               transition={{ delay: 0.16, duration: 0.42, ease: easeOut }}
             >
-              <p className={styles.successTitle}>Uploaded successfully</p>
+              <p className={styles.successTitle}>
+                {isError ? "Upload failed" : "Uploaded successfully"}
+              </p>
               <p className={styles.successSubtitle}>
-                Everything has been processed successfully
+                {isError
+                  ? "Something went wrong. Please try again."
+                  : "Everything has been processed successfully"}
               </p>
             </motion.div>
 

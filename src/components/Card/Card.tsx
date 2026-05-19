@@ -10,11 +10,15 @@ import UploadingState from "./UploadingState";
 const REPEL_RADIUS = 90;
 const REPEL_STRENGTH = 10;
 
-type UploadState = "idle" | "uploading" | "success";
+type UploadState = "idle" | "uploading" | "success" | "error";
+export type UploadOutcome = "success" | "error";
 
 interface CardProps {
   className?: string;
   style?: React.CSSProperties;
+  outcome?: UploadOutcome;
+  uploadDuration?: number;
+  autoStart?: boolean;
 }
 
 // Parent stagger: each child exits 110ms after the previous
@@ -30,7 +34,13 @@ const fadePop = {
   exit: { opacity: 0 },
 };
 
-export default function Card({ className, style }: CardProps) {
+export default function Card({
+  className,
+  style,
+  outcome = "success",
+  uploadDuration = 2.8,
+  autoStart = false,
+}: CardProps) {
   const innerRef = useRef<HTMLDivElement>(null);
   const iconSlotRef = useRef<HTMLDivElement>(null);
   const rectRef = useRef<SVGRectElement>(null);
@@ -38,22 +48,30 @@ export default function Card({ className, style }: CardProps) {
   const dashTween = useRef<gsap.core.Tween | null>(null);
   const dragCounter = useRef(0);
 
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [uploadState, setUploadState] = useState<UploadState>(
+    autoStart ? "uploading" : "idle"
+  );
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [rippleKey, setRippleKey] = useState(0);
+  const [uploadSession, setUploadSession] = useState(autoStart ? 1 : 0);
 
   const isActive = isHovered || isDragging;
 
+  const beginUpload = useCallback(() => {
+    setUploadSession((session) => session + 1);
+    setUploadState("uploading");
+  }, []);
+
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    setUploadState("uploading");
+    beginUpload();
   };
 
   const handleUploadComplete = useCallback(() => {
-    setUploadState("success");
+    setUploadState(outcome === "success" ? "success" : "error");
     setRippleKey((key) => key + 1);
-  }, []);
+  }, [outcome]);
 
   const handleReset = useCallback(() => {
     setUploadState("idle");
@@ -165,7 +183,7 @@ export default function Card({ className, style }: CardProps) {
 
   const innerClass = [
     styles.inner,
-    uploadState === "uploading" || uploadState === "success"
+    uploadState === "uploading" || uploadState === "success" || uploadState === "error"
       ? styles.innerUploading
       : isActive
       ? styles.innerHovered
@@ -198,8 +216,15 @@ export default function Card({ className, style }: CardProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {uploadState === "success" && (
-          <div key={rippleKey} className={styles.successRipple} />
+        {(uploadState === "success" || uploadState === "error") && (
+          <div
+            key={rippleKey}
+            className={
+              uploadState === "success"
+                ? styles.successRipple
+                : styles.errorRipple
+            }
+          />
         )}
 
         {/* Dashed border — fades out independently */}
@@ -259,9 +284,9 @@ export default function Card({ className, style }: CardProps) {
 
         {/* Uploading scene */}
         <AnimatePresence>
-          {(uploadState === "uploading" || uploadState === "success") && (
+          {(uploadState === "uploading" || uploadState === "success" || uploadState === "error") && (
             <motion.div
-              key="uploading"
+              key={`uploading-${uploadSession}`}
               className={styles.uploadingScene}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -269,7 +294,8 @@ export default function Card({ className, style }: CardProps) {
               transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" }}
             >
               <UploadingState
-                isComplete={uploadState === "success"}
+                result={uploadState === "success" || uploadState === "error" ? uploadState : null}
+                uploadDuration={uploadDuration}
                 onComplete={handleUploadComplete}
                 onReset={handleReset}
               />
