@@ -28,6 +28,15 @@ function FileSvg() {
   Flap top edge y ≈ 30 (path y=38, viewBox origin y=8)
 */
 const FILE_LEFT = 24.5; // folder center 47.5 − half file width 23 = 24.5
+
+const SPARKLES = [
+  { left:  2, top: 28, delay: 0.3  },
+  { left:  0, top: 56, delay: 1.1  },
+  { left:  8, top: 78, delay: 0.7  },
+  { left: 113, top: 24, delay: 0.6  },
+  { left: 115, top: 58, delay: 1.5  },
+  { left: 109, top: 80, delay: 0.05 },
+];
 const FILE_TOP = -20;
 const SPAWN_Y = -48;
 const FILE_INSERTION_DELAY = 1.05;
@@ -206,6 +215,18 @@ export default function UploadingState({
           animate={{ scale: isComplete ? 0.68 : 1 }}
           transition={{ duration: 0.52, ease: easeOut }}
         >
+          {!isComplete && (
+            <div className={styles.sparklesWrap}>
+              {SPARKLES.map((s, i) => (
+                <span
+                  key={i}
+                  className={styles.sparkle}
+                  style={{ left: s.left, top: s.top, animationDelay: `${s.delay}s` }}
+                />
+              ))}
+            </div>
+          )}
+
           <div
             ref={folderStackRef}
             className={styles.folderStack}
@@ -235,6 +256,7 @@ export default function UploadingState({
                 opacity: 0.88,
                 duration: 0.35,
                 ease: "power2.out",
+                transformOrigin: "center center",
               });
             }}
           >

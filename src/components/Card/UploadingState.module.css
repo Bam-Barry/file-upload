@@ -78,6 +78,29 @@
   filter: blur(1.5px);
 }
 
+/* ─── Sparkles ─── */
+.sparklesWrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sparkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #a8c8ff;
+  opacity: 0;
+  animation: sparklePulse 2.2s ease-in-out infinite;
+}
+
+@keyframes sparklePulse {
+  0%, 100% { transform: rotate(45deg) scale(0); opacity: 0; }
+  45%       { transform: rotate(45deg) scale(1.2); opacity: 0.5; }
+  65%       { transform: rotate(45deg) scale(0.8); opacity: 0.35; }
+}
+
 /* ─── Progress bar ─── */
 .progressWrap {
   display: flex;
