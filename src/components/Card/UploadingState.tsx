@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import gsap from "gsap";
 import { useEffect, useRef } from "react";
 import {
@@ -15,7 +15,7 @@ const easeOut = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 function FileSvg() {
   return (
-    <svg width={38} height={50} viewBox="0 0 38 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width={46} height={60} viewBox="0 0 38 50" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M6 0 L28 0 L38 10 L38 50 L0 50 L0 6 Q0 0 6 0 Z" fill="#F3F3F3" />
       <path d="M28 0 L38 10 L28 10 Z" fill="#D1DDFF" />
     </svg>
@@ -27,13 +27,43 @@ function FileSvg() {
   Path center x ≈ 47.5 → FILE_LEFT = 47.5 − 19 = 28.5
   Flap top edge y ≈ 30 (path y=38, viewBox origin y=8)
 */
-const FILE_LEFT = 28.5;
+const FILE_LEFT = 24.5; // folder center 47.5 − half file width 23 = 24.5
 const FILE_TOP = -20;
 const SPAWN_Y = -48;
+const FILE_INSERTION_DELAY = 1.05;
 
-export default function UploadingState() {
+interface UploadingStateProps {
+  isComplete: boolean;
+  onComplete: () => void;
+  onReset: () => void;
+}
+
+export default function UploadingState({
+  isComplete,
+  onComplete,
+  onReset,
+}: UploadingStateProps) {
   const fileRef = useRef<HTMLDivElement>(null);
   const folderStackRef = useRef<HTMLDivElement>(null);
+  const completeRef = useRef(false);
+
+  const progress = useMotionValue(0);
+  const fillWidth = useTransform(progress, (v) => `${v}%`);
+  const pctLabel = useTransform(progress, (v) => `${Math.round(v)}%`);
+
+  useEffect(() => {
+    const controls = animate(progress, 100, {
+      delay: 0.52,
+      duration: 2.8,
+      ease: [0.22, 1, 0.36, 1],
+      onComplete,
+    });
+    return controls.stop;
+  }, [onComplete, progress]);
+
+  useEffect(() => {
+    completeRef.current = isComplete;
+  }, [isComplete]);
 
   useEffect(() => {
     const file = fileRef.current;
@@ -42,9 +72,17 @@ export default function UploadingState() {
 
     let killed = false;
     let delayed: gsap.core.Tween | null = null;
+    let tl: gsap.core.Timeline | null = null;
+
+    gsap.set(file, {
+      y: SPAWN_Y,
+      opacity: 0,
+      scale: 0.82,
+      transformOrigin: "center center",
+    });
 
     function runCycle() {
-      if (killed) return;
+      if (killed || completeRef.current) return;
 
       gsap.set(file, {
         y: SPAWN_Y,
@@ -53,7 +91,7 @@ export default function UploadingState() {
         transformOrigin: "center center",
       });
 
-      const tl = gsap.timeline();
+      tl = gsap.timeline();
 
       tl
         .to(file, {
@@ -101,68 +139,164 @@ export default function UploadingState() {
           ease: "power2.in",
         })
         .call(() => {
-          if (!killed) delayed = gsap.delayedCall(0.3, runCycle);
+          if (!killed && !completeRef.current) {
+            delayed = gsap.delayedCall(0.3, runCycle);
+          }
         });
     }
 
-    delayed = gsap.delayedCall(0.65, runCycle);
+    delayed = gsap.delayedCall(FILE_INSERTION_DELAY, runCycle);
 
     return () => {
       killed = true;
       delayed?.kill();
+      tl?.kill();
       gsap.killTweensOf(file);
       gsap.killTweensOf(folder);
     };
   }, []);
 
+  useEffect(() => {
+    const file = fileRef.current;
+    const folder = folderStackRef.current;
+    if (!file || !folder || !isComplete) return;
+
+    gsap.killTweensOf(file);
+    gsap.killTweensOf(folder);
+    gsap.to(file, {
+      y: 38,
+      scale: 0.86,
+      opacity: 0.88,
+      duration: 0.28,
+      ease: "power3.out",
+    });
+    gsap.to(folder, {
+      scaleX: 1,
+      scaleY: 1,
+      duration: 0.22,
+      ease: "power2.out",
+    });
+  }, [isComplete]);
+
   return (
     <div className={styles.container}>
       <motion.div
-        className={styles.animArea}
-        initial={{ scale: 0.7 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.48, ease: easeOut }}
+        className={styles.successStack}
+        initial={{ y: 0 }}
+        animate={{
+          y: isComplete ? -30 : 0,
+        }}
+        transition={{ duration: 0.52, ease: easeOut }}
       >
-        <div
-          ref={folderStackRef}
-          className={styles.folderStack}
-          style={{ width: FOLDER_WIDTH, height: FOLDER_HEIGHT }}
+        <motion.div
+          className={styles.animArea}
+          initial={{ scale: 0.7 }}
+          animate={{ scale: isComplete ? 0.68 : 1 }}
+          transition={{ duration: 0.52, ease: easeOut }}
         >
-          <div className={styles.folderLayer}>
-            <FolderBackLayer width={FOLDER_WIDTH} height={FOLDER_HEIGHT} />
-          </div>
+          <div
+            ref={folderStackRef}
+            className={styles.folderStack}
+            style={{ width: FOLDER_WIDTH, height: FOLDER_HEIGHT }}
+          >
+            <div className={styles.folderLayer}>
+              <FolderBackLayer width={FOLDER_WIDTH} height={FOLDER_HEIGHT} />
+            </div>
 
-          <div className={styles.filesLayer}>
-            <div
-              ref={fileRef}
-              className={styles.file}
-              style={{ left: FILE_LEFT, top: FILE_TOP }}
-            >
-              <FileSvg />
+            <div className={styles.filesLayer}>
+              <div
+                ref={fileRef}
+                className={styles.file}
+                style={{ left: FILE_LEFT, top: FILE_TOP }}
+              >
+                <FileSvg />
+              </div>
+            </div>
+
+            <div className={styles.folderFrontLayer}>
+              <FolderFrontLayer width={FOLDER_WIDTH} height={FOLDER_HEIGHT} />
             </div>
           </div>
+        </motion.div>
 
-          <div className={styles.folderFrontLayer}>
-            <FolderFrontLayer width={FOLDER_WIDTH} height={FOLDER_HEIGHT} />
-          </div>
-        </div>
+        <AnimatePresence>
+          {isComplete && (
+            <motion.div
+              className={styles.checkBadge}
+              initial={{ opacity: 0, y: -12, scale: 0.65 }}
+              animate={{ opacity: 1, y: -12, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.8 }}
+              transition={{ delay: 0.1, duration: 0.46, ease: easeOut }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path
+                  d="M5.25 10.35L8.38 13.48L14.95 6.52"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
-      <motion.div
-        className={styles.progressWrap}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.38, duration: 0.42, ease: easeOut }}
-      >
-        <div className={styles.track}>
+      <AnimatePresence mode="wait">
+        {!isComplete ? (
           <motion.div
-            className={styles.fill}
-            initial={{ width: "0%" }}
-            animate={{ width: "68%" }}
-            transition={{ delay: 0.52, duration: 2.4, ease: easeOut }}
-          />
-        </div>
-      </motion.div>
+            key="progress"
+            className={styles.progressWrap}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ delay: 0.38, duration: 0.42, ease: easeOut }}
+          >
+            <div className={styles.trackWrap}>
+              <div className={styles.track}>
+                <motion.div className={styles.fill} style={{ width: fillWidth }} />
+              </div>
+              <motion.span className={styles.pctText}>{pctLabel}</motion.span>
+            </div>
+          </motion.div>
+        ) : (
+          <div key="success" className={styles.successContent}>
+            <motion.div
+              className={styles.textGroup}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ delay: 0.16, duration: 0.42, ease: easeOut }}
+            >
+              <p className={styles.successTitle}>Uploaded successfully</p>
+              <p className={styles.successSubtitle}>
+                Everything has been processed successfully
+              </p>
+            </motion.div>
+
+            <motion.button
+              type="button"
+              className={styles.resetButton}
+              aria-label="Upload again"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ delay: 0.78, duration: 0.34, ease: easeOut }}
+              onClick={onReset}
+            >
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path
+                  d="M15.62 8.2C14.95 5.75 12.71 4 10.08 4C7.73 4 5.7 5.39 4.78 7.39M4.38 4.94V7.72H7.16M4.38 11.8C5.05 14.25 7.29 16 9.92 16C12.27 16 14.3 14.61 15.22 12.61M15.62 15.06V12.28H12.84"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </motion.button>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

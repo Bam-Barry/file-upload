@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./Card.module.css";
 import UploadIcon from "./UploadIcon";
 import UploadingState from "./UploadingState";
@@ -41,6 +41,7 @@ export default function Card({ className, style }: CardProps) {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [rippleKey, setRippleKey] = useState(0);
 
   const isActive = isHovered || isDragging;
 
@@ -49,17 +50,37 @@ export default function Card({ className, style }: CardProps) {
     setUploadState("uploading");
   };
 
-  const handleClick = () => fileInputRef.current?.click();
+  const handleUploadComplete = useCallback(() => {
+    setUploadState("success");
+    setRippleKey((key) => key + 1);
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setUploadState("idle");
+    setIsDragging(false);
+    dragCounter.current = 0;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
+  const handleClick = () => {
+    if (uploadState !== "idle") return;
+    fileInputRef.current?.click();
+  };
 
   const handleDragEnter = (e: React.DragEvent) => {
+    if (uploadState !== "idle") return;
     e.preventDefault();
     dragCounter.current++;
     setIsDragging(true);
   };
 
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
+  const handleDragOver = (e: React.DragEvent) => {
+    if (uploadState !== "idle") return;
+    e.preventDefault();
+  };
 
   const handleDragLeave = (e: React.DragEvent) => {
+    if (uploadState !== "idle") return;
     e.preventDefault();
     dragCounter.current--;
     if (dragCounter.current === 0) setIsDragging(false);
@@ -69,6 +90,7 @@ export default function Card({ className, style }: CardProps) {
     e.preventDefault();
     dragCounter.current = 0;
     setIsDragging(false);
+    if (uploadState !== "idle") return;
     handleFiles(e.dataTransfer.files);
   };
 
@@ -176,6 +198,10 @@ export default function Card({ className, style }: CardProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
+        {uploadState === "success" && (
+          <div key={rippleKey} className={styles.successRipple} />
+        )}
+
         {/* Dashed border — fades out independently */}
         <motion.svg
           className={styles.dashedBorder}
@@ -231,9 +257,9 @@ export default function Card({ className, style }: CardProps) {
           )}
         </AnimatePresence>
 
-        {/* Uploading scene — coming next */}
+        {/* Uploading scene */}
         <AnimatePresence>
-          {uploadState === "uploading" && (
+          {(uploadState === "uploading" || uploadState === "success") && (
             <motion.div
               key="uploading"
               className={styles.uploadingScene}
@@ -242,7 +268,11 @@ export default function Card({ className, style }: CardProps) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" }}
             >
-              <UploadingState />
+              <UploadingState
+                isComplete={uploadState === "success"}
+                onComplete={handleUploadComplete}
+                onReset={handleReset}
+              />
             </motion.div>
           )}
         </AnimatePresence>
